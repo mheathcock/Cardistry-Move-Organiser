@@ -3,7 +3,7 @@ import bcrypt
 from pathlib import Path
 import db
 
-DB_PATH = Path("db.sqlite")
+DB_PATH = Path("Cardistry.db")
 
 
 
@@ -49,12 +49,12 @@ def login_User(username, password):
     return False
 
 #test cases
-"""
+
 if __name__ == "__main__":
     print("1. Registering a new user...")
     register_User("test_user", "secure_password")
+    register_User("test_user2", "secure_password")
 
     print("2. Logging in...")
     login_User("test_user", "secure_password")  # Should succeed
     login_User("test_user", "wrong_password")  # Should fail
-"""

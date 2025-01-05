@@ -5,8 +5,10 @@ from tkinter import filedialog
 import sqlite3
 from datetime import datetime 
 from pathlib import Path
+import subprocess
 
-DB_PATH = Path("db.sqlite")
+
+DB_PATH = Path("Cardistry.db")
 """Getter function for grabbing the associated id from username"""
 def get_user_id(username):
     db = sqlite3.connect(DB_PATH)
@@ -64,17 +66,20 @@ def upload_video(username):
         return None
     
 """Function to update the database with the users new video """
-def insert_video_to_db(user_id, video_path, notes):
+def insert_video_to_db(user_id, video_path, notes, thumbnail_path):
      db = sqlite3.connect(DB_PATH)
      cursor = db.cursor()
     #SQL to insert relevant video metadata to the db
      cursor.execute("""
-                    INSERT INTO videos (user_id, file_path, upload_date, notes) 
-                    VALUES(?, ?, ?, ?);
-                    """,(user_id, video_path, datetime.now(), notes))
+                    INSERT INTO videos (user_id, file_path, upload_date, notes, thumbnail_path) 
+                    VALUES(?, ?, ?, ?, ?);
+                    """,(user_id, video_path, datetime.now(), notes, thumbnail_path))
+     
+     video_id = cursor.lastrowid
      db.commit()
      db.close()
      print(f"video data saved: {video_path}")
+     return video_id
 
 """Wrapper to the upload_video function and insert the metadata into the db as well."""
 def upload_and_store_video(username):
@@ -85,13 +90,38 @@ def upload_and_store_video(username):
     if video_path:
         notes = input("Any notes on the move?: ")
 
-        insert_video_to_db(user_id, video_path, notes)
+        video_id = insert_video_to_db(user_id, video_path, notes, "")
+
+        thumbnail_path = os.path.join(os.path.dirname(video_path), f"{video_id}_thumbnail.jpg")
+
+        generate_thumbnail(video_path, thumbnail_path)
+
+        db = sqlite3.connect(DB_PATH)
+        cursor = db.cursor()
+        cursor.execute("UPDATE videos SET thumbnail_path = ? WHERE id = ?", (thumbnail_path, video_id))
+        db.commit()
+        db.close()
+
         print(f"Video {video_path} uploaded and saved")
     else:
         print("ERROR: video upload failed")
 
+def generate_thumbnail(video_path, thumbnail_path):
+     try:
+        # Run the FFmpeg command to create a thumbnail
+        subprocess.run([
+            'ffmpeg', '-i', video_path,  # Input video
+            '-ss', '00:00:01.000',  # Timestamp to capture the thumbnail from (1 second in)
+            '-vframes', '1',  # Capture only 1 frame
+            thumbnail_path  # Output path for the thumbnail
+        ], check=True)
+        print(f"Thumbnail generated at {thumbnail_path}")
+     except subprocess.CalledProcessError as e:
+         print(f"ERROR generating thumbnail: {e}")
+
+
 #Test case
-"""
+
 if __name__ == "__main__":
-        upload_and_store_video("test_user")
-        """
+        upload_and_store_video("test_user2")
+       
