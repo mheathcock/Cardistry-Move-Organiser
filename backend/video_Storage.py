@@ -9,6 +9,7 @@ import subprocess
 
 
 DB_PATH = Path("Cardistry.db")
+
 """Getter function for grabbing the associated id from username"""
 def get_user_id(username):
     db = sqlite3.connect(DB_PATH)
@@ -119,9 +120,20 @@ def generate_thumbnail(video_path, thumbnail_path):
      except subprocess.CalledProcessError as e:
          print(f"ERROR generating thumbnail: {e}")
 
+"""Function for deleting a video from db"""
+def delete_video(video_id):
+    db = sqlite3.connect(DB_PATH)
+    cursor = db.cursor()
+    cursor.execute("DELETE FROM videos WHERE id = ?", (video_id,))
+    db.commit()
+    db.close()
+    print(f"Video with ID {video_id} deleted.")
+
+
 
 #Test case
 
 if __name__ == "__main__":
         upload_and_store_video("test_user2")
+        delete_video(2)
        
