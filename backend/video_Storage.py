@@ -120,15 +120,36 @@ def generate_thumbnail(video_path, thumbnail_path):
      except subprocess.CalledProcessError as e:
          print(f"ERROR generating thumbnail: {e}")
 
-"""Function for deleting a video from db"""
+"""Function for deleting a video from db and disk"""
 def delete_video(video_id):
     db = sqlite3.connect(DB_PATH)
     cursor = db.cursor()
-    cursor.execute("DELETE FROM videos WHERE id = ?", (video_id,))
-    db.commit()
+    
+    # Fetch the file path to delete the file itself
+    cursor.execute("SELECT file_path FROM videos WHERE id = ?", (video_id,))
+    result = cursor.fetchone()
     db.close()
-    print(f"Video with ID {video_id} deleted.")
 
+    if result:
+        file_path = result[0]
+        if os.path.exists(file_path):
+            try:
+                os.remove(file_path)  # Delete the actual video file
+                print(f"Video file {file_path} deleted from storage.")
+            except Exception as e:
+                print(f"Error deleting video file: {e}")
+        else:
+            print(f"Video file {file_path} does not exist on storage.")
+
+        # Now delete the video record from the database
+        db = sqlite3.connect(DB_PATH)
+        cursor = db.cursor()
+        cursor.execute("DELETE FROM videos WHERE id = ?", (video_id,))
+        db.commit()
+        db.close()
+        print(f"Video with ID {video_id} deleted from database.")
+    else:
+        print(f"ERROR: Video with ID {video_id} not found in database.")
 
 
 #Test case
