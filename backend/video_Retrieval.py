@@ -16,13 +16,13 @@ def grab_all_videos(username):
      db = sqlite3.connect(DB_PATH)
      cursor = db.cursor()
     #SQL command to select relevant metadata about the videos from the specific user
-     cursor.execute("SELECT file_path, upload_date, notes FROM videos WHERE user_id = ?", (user_id,))
+     cursor.execute("SELECT file_path, upload_date, notes, thumbnail_path FROM videos WHERE user_id = ?", (user_id,))
      result = cursor.fetchall()
      db.close()
      
      #turns the result of tuples into a dictionary
      video_list = [
-        {"file_path": row[0], "upload_date": row[1], "notes": row[2]} for row in result
+        {"file_path": row[0], "upload_date": row[1], "notes": row[2], "thumbnail_path": row[3]} for row in result
     ]
      return video_list
 
