@@ -8,6 +8,7 @@ DB_PATH = Path("Cardistry.db")
 
 
 def register_User(username, password):
+#PRINT STATEMENTS FOR DEBUGGING
     print(f"Registering user: {username}")
     print(f"Password provided: {password}")
     
@@ -34,6 +35,7 @@ def register_User(username, password):
         db.close()
 
 def login_User(username, password):
+#PRINT STATEMENTS FOR DEBUGGING
     print(f"Attempting login for user: {username}")
     print(f"Password provided: {password}")
 
