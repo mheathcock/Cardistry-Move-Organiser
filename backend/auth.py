@@ -1,13 +1,16 @@
 import sqlite3
 import bcrypt
 from pathlib import Path
-import db
+from .db import *
 
 DB_PATH = Path("Cardistry.db")
 
 
 
 def register_User(username, password):
+    print(f"Registering user: {username}")
+    print(f"Password provided: {password}")
+    
     db = sqlite3.connect(DB_PATH)
     cursor = db.cursor()
 
@@ -31,6 +34,9 @@ def register_User(username, password):
         db.close()
 
 def login_User(username, password):
+    print(f"Attempting login for user: {username}")
+    print(f"Password provided: {password}")
+
     db = sqlite3.connect(DB_PATH)
     cursor = db.cursor()
     #Select the hashed pw of the user with matching username 

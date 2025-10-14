@@ -137,7 +137,7 @@ def delete_video(video_id):
                 os.remove(file_path)  # Delete the actual video file
                 print(f"Video file {file_path} deleted from storage.")
             except Exception as e:
-                print(f"Error deleting video file: {e}")
+                print(f"ERROR: deleting video file: {e}")
         else:
             print(f"Video file {file_path} does not exist on storage.")
 
