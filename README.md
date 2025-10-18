@@ -6,8 +6,8 @@ Built using **Python** with the built in ```tkinter``` library for the GUI and a
    * GUI
        - [X] ***Skeleton*** GUI For Account Login / Register
        - [ ] ***Skeleton*** GUI for Video Upload
-       - [ ] ***Skeleton*** GUI for Video Database
-       - [ ] ***Skeleton*** GUI for Video Viewing / Notes
+       - [X] ***Skeleton*** GUI for Video Database
+       - [X] ***Skeleton*** GUI for Video Viewing / Notes
        -
        - [ ] ***Polished*** GUI for Account Login / Register 
        - [ ] ***Polished*** GUI for Video Upload
@@ -29,3 +29,4 @@ To be worked on once core features are implemented
      - Sub-categories: **One Handed**, **Two Handed**, **Body** etc
   - **Progress Tracking** System to allow users to mark moves as ***Learning***, ***Mastered***, ***Archived***
   - **Search functionality** for move name and notes
+  - **Embedded** Video Player
