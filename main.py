@@ -252,30 +252,9 @@ def register_gui():
         command=register_result
     ).pack(pady=(20, 5))
   
-
-def show_video_player_gui(username, video_path):
-    for widget in app.winfo_children():
-        widget.destroy()
-    app.title("Video Player")
-    #Back button to return to video gallery
-    CTk.CTkButton(
-        app, 
-        text="Back", 
-        width=100, 
-        height=30, 
-        command=lambda: display_video_gui(username),
-        fg_color="gray", 
-        hover_color="darkgray"
-    ).pack(side="top", anchor="nw", pady=10, padx=10)
-
-    video_frame = CTk.CTkFrame(
-        app,
-        fg_color="#121212",
-        corner_radius=35
-    )
-    video_frame.pack(expand=True, fill="both", padx=100, pady=100)
-    
-
+#Skeleton codem will open the video using the default system video player. Want to expand this to a custom video player GUI later.
+def play_video(video_path):
+    os.startfile(video_path)  # For Windows. 
 
 """
 Front end GUI for displaying videos and their thumbnails.
@@ -308,7 +287,7 @@ def display_video_gui(username):
 
         #Iterate through all videos and place them in the grid
         for index, video in enumerate(user_videos):
-            video_path = video.get("video_path") # Extract the video path needed for playback
+            video_path = video.get("file_path") # Extract the video path needed for playback
             thumbnail_path = video.get("thumbnail_path")
             notes = video.get('notes', 'No Notes Provided')
             #These two calculations will decide where in the grid each video thumbnail will go. It basically goes up until the max_columns is reached then starts a new row.
@@ -329,7 +308,7 @@ def display_video_gui(username):
                         video_card, 
                         text="", 
                         image=ctk_image,
-                        command=lambda path=video_path: show_video_player_gui(username, path), # Command to open the video
+                        command=lambda path=video_path: play_video(path), # Command to open the video
                         fg_color="transparent",
                         hover_color="#9C5AF7", 
                         width=200,
