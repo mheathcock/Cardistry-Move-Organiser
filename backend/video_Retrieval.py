@@ -1,7 +1,7 @@
 
 import sqlite3
 from pathlib import Path
-from video_Storage import get_user_id
+from .video_Storage import get_user_id
 
 DB_PATH = Path("Cardistry.db")
 

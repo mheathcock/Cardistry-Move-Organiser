@@ -2,8 +2,9 @@ from tkinter import *
 from tkinter import messagebox 
 from backend.auth import login_User, register_User
 import customtkinter as CTk
-
-
+from backend.video_Retrieval import *
+from PIL import Image, ImageTk
+import os
 
 app = CTk.CTk()
 app.geometry("1920x1080")
@@ -127,7 +128,7 @@ def login_gui():
     def login_result():
         if login_User(username_entry.get(), password_entry.get()):
             print("Login successful")
-            upload_video_gui()
+            display_video_gui(username_entry.get())
         else:
             print("Login failed")
             messagebox.askretrycancel("Login Fail", "Username or Password Incorrect. Try again?") 
@@ -230,7 +231,7 @@ def register_gui():
         if register_User(username_entry.get(), password_entry.get()):
             print("Registration successful")
             messagebox.showinfo("Registration Success", "User registered successfully. Please login.")
-            login_gui()
+            login_gui(username)
         else:
             print("Registration failed")
             messagebox.showerror("Registration Fail", "Username already exists. Try a different one.") 
@@ -252,23 +253,126 @@ def register_gui():
     ).pack(pady=(20, 5))
   
 
+def show_video_player_gui(username, video_path):
+    for widget in app.winfo_children():
+        widget.destroy()
+    app.title("Video Player")
+    #Back button to return to video gallery
+    CTk.CTkButton(
+        app, 
+        text="Back", 
+        width=100, 
+        height=30, 
+        command=lambda: display_video_gui(username),
+        fg_color="gray", 
+        hover_color="darkgray"
+    ).pack(side="top", anchor="nw", pady=10, padx=10)
 
+    video_frame = CTk.CTkFrame(
+        app,
+        fg_color="#121212",
+        corner_radius=35
+    )
+    video_frame.pack(expand=True, fill="both", padx=100, pady=100)
+    
 
 
 """
-Front end GUI for uploading videos and storing metadata.
+Front end GUI for displaying videos and their thumbnails.
 """
-def upload_video_gui():
-          #forget previous widgets
+
+def display_video_gui(username):
+    #forget previous widgets
     for widget in app.winfo_children():
         widget.destroy() 
-    app.title("Upload Video")
+    app.title(f"Video Gallery - {username}") #Title includes the logged in username
+    #Main content frame to hold video thumbnails
+    main_content_frame = CTk.CTkFrame(
+        app, 
+        fg_color="#121212",
+        corner_radius=30
+    
+    )
+    main_content_frame.pack(fill="both", expand=True)
 
+    #Fetch all videos for the logged in user
+    user_videos = grab_all_videos(username)
 
-    Label(app, text="Upload Video", font=("Arial", 24)).pack(pady=20)
+    #Main logic to display video thumbnails in a grid
+    if user_videos:#If there are videos for the user
+        CTk.CTkLabel(main_content_frame, text="Your Uploaded Videos", font=CTk.CTkFont(size=30, weight="bold")).pack(pady=(20, 10))
+        thumbnail_grid_frame = CTk.CTkFrame(main_content_frame, fg_color="transparent")
+        thumbnail_grid_frame.pack(pady=10, padx=20, anchor="n")
 
+        MAX_COLUMNS = 4 #how many items can be in a single row
 
-   
+        #Iterate through all videos and place them in the grid
+        for index, video in enumerate(user_videos):
+            video_path = video.get("video_path") # Extract the video path needed for playback
+            thumbnail_path = video.get("thumbnail_path")
+            notes = video.get('notes', 'No Notes Provided')
+            #These two calculations will decide where in the grid each video thumbnail will go. It basically goes up until the max_columns is reached then starts a new row.
+            row = index // MAX_COLUMNS #// returns largest whole number of times the divisor fits into the divident. Eg index 0-3 /4 will equal 0 hence first row index 4-7 /4 will equal 1 hence second row etc
+            column = index % MAX_COLUMNS #similar to row but % returns the remainder of the division. Eg index 0-3 %4 will equal 0-3 going up the columns until 4%4 which will reset to 0 starting the new row in the first column again.
+
+            video_card = CTk.CTkFrame(thumbnail_grid_frame, fg_color="#BB86FB", corner_radius=35, width=220, height=250)
+            video_card.grid(row=row, column=column, padx=15, pady=15, sticky="nsew")#.grid places the frame in the grid at the calculated row and column with padding around each card
+            if thumbnail_path:
+                try:
+                    #Try open the Image using PIL
+                    thumbnail_image = Image.open(thumbnail_path)
+                    #Create the CTkImage object resized to fit the card
+                    ctk_image = CTk.CTkImage(light_image=thumbnail_image, dark_image=thumbnail_image, size=(200, 150))
+                    
+                    #Makes a button with the thumbnail image that opens the video player when clicked
+                    image_button = CTk.CTkButton(
+                        video_card, 
+                        text="", 
+                        image=ctk_image,
+                        command=lambda path=video_path: show_video_player_gui(username, path), # Command to open the video
+                        fg_color="transparent",
+                        hover_color="#9C5AF7", 
+                        width=200,
+                        height=150,
+                        border_width=0,
+                        cursor="hand2"
+                    )
+                    image_button.pack(pady=(10, 5), padx=10)
+                    
+                    #Keep a persistent reference to the image object to prevent garbage collection
+                    image_button.image_ref = ctk_image
+                    
+                    #Create a CTkLabel for the notes below the image
+                    notes_label = CTk.CTkLabel(video_card, text=notes, width=200, wraplength=200, compound="center", font=CTk.CTkFont(size=14), text_color="white")
+                    notes_label.pack(pady=(0, 10), padx=10)
+
+                except FileNotFoundError:#Handles case where thumbnail file is missing. Thumbnail path exists in db but file not found on disk
+                    CTk.CTkLabel(video_card, text="Thumbnail not found.", text_color="#FF4500").pack(pady=5)
+                    CTk.CTkLabel(video_card, text=notes, wraplength=180).pack(pady=5)#notes still displayed
+                except Exception as e: #Handles any other exceptions that may occur
+                    CTk.CTkLabel(video_card, text=f"Error loading image.", text_color="#FF4500").pack(pady=5)
+                    CTk.CTkLabel(video_card, text=f"Details: {e}", wraplength=180).pack(pady=5)#error details displayed
+                
+            else:#Handles the case where thumbnail_path is None. No thumbnail was generated for the video
+                # Placeholder button when no thumbnail exists
+                no_thumb_button = CTk.CTkButton(
+                    video_card, 
+                    text="No Thumbnail\n(Click to Play)", 
+                    font=CTk.CTkFont(size=18, weight="bold"),
+                    command=lambda path=video_path: show_video_player_gui(username, path),
+                    width=200, 
+                    height=150,
+                    fg_color="#404040", 
+                    hover_color="#505050",
+                    cursor="hand2"
+                )
+                no_thumb_button.pack(pady=(10, 5), padx=10)
+                
+                CTk.CTkLabel(video_card, text=notes, wraplength=180).pack(pady=5)#notes still displayed
+            
+    else: #Handles the case where user_videos is empty (User has no videos to show)
+        CTk.CTkLabel(main_content_frame, text="No videos found.", font=CTk.CTkFont(size=24, weight="bold")).pack(pady=20)
+
     
 login_or_register_gui()
 app.mainloop()

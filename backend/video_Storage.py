@@ -155,6 +155,6 @@ def delete_video(video_id):
 #Test case
 
 if __name__ == "__main__":
-        upload_and_store_video("test_user2")
-        delete_video(2)
+        upload_and_store_video("Max")
+       # delete_video(2)
        
